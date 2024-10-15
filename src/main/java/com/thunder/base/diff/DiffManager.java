@@ -24,8 +24,10 @@ public class DiffManager {
                     Long.class, Float.class, Double.class, Character.class, UUID.class
             );
 
+    static final String ROOT_FIELD_NAME = "ROOT";
+
     public static ResultNode diff(Object oldValue, Object newValue) {
-        return diff(null, oldValue, newValue);
+        return diff(ROOT_FIELD_NAME, oldValue, newValue);
     }
 
     private static ResultNode diff(String fieldName, Object oldObject, Object newObject) {
@@ -106,7 +108,9 @@ public class DiffManager {
             }
             var newArrayItem = newArray[i];
 
-            resultNodeChildren.add(diff(oldArrayItem, newArrayItem));
+            resultNodeChildren.add(
+                    diff(String.format("array[%s]", i), oldArrayItem, newArrayItem)
+            );
         }
 
         if(oldArray.length < newArray.length) {
@@ -120,7 +124,7 @@ public class DiffManager {
 
         return new ResultNode(
                 fieldName, oldArray, newArray,
-                getStateBasedOnChildrenStates(resultNodeChildren), Collections.emptyList()
+                getStateBasedOnChildrenStates(resultNodeChildren), resultNodeChildren
         );
     }
 
