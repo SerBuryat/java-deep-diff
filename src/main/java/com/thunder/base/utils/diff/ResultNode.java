@@ -1,4 +1,4 @@
-package com.thunder.base.diff;
+package com.thunder.base.utils.diff;
 
 import java.util.Collection;
 
@@ -7,5 +7,9 @@ record ResultNode(String fieldName,
                          Object newValue,
                          ResultNodeState state,
                          Collection<ResultNode> children) {
+
+    public enum ResultNodeState {
+        ADDED, CHANGED, UNTOUCHED, REMOVED
+    }
 
 }

@@ -1,9 +1,9 @@
-package com.thunder.base.diff;
+package com.thunder.base.utils.diff;
 
-import static com.thunder.base.diff.ResultNodeState.ADDED;
-import static com.thunder.base.diff.ResultNodeState.CHANGED;
-import static com.thunder.base.diff.ResultNodeState.REMOVED;
-import static com.thunder.base.diff.ResultNodeState.UNTOUCHED;
+import static com.thunder.base.utils.diff.ResultNode.ResultNodeState.ADDED;
+import static com.thunder.base.utils.diff.ResultNode.ResultNodeState.CHANGED;
+import static com.thunder.base.utils.diff.ResultNode.ResultNodeState.REMOVED;
+import static com.thunder.base.utils.diff.ResultNode.ResultNodeState.UNTOUCHED;
 import static java.util.Collections.emptyList;
 
 import java.lang.reflect.Field;
@@ -13,20 +13,22 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 
 public class DiffManager {
 
-    // make customizable?
+    // todo - make customizable to custom or other 'simple types' as `UUID` or `Number`?
     private static final List<Class<?>> CLASSES_FOR_SIMPLE_DIFF =
             List.of(
                     String.class, Boolean.class, Byte.class, Short.class, Integer.class,
-                    Long.class, Float.class, Double.class, Character.class, UUID.class
+                    Long.class, Float.class, Double.class, Character.class
             );
 
+    // todo - make custom diff rules for some user classes to skip some fields or value or etc.?
+
+    // todo - or make `null`?
     static final String ROOT_FIELD_NAME = "ROOT";
 
-    public static ResultNode diff(Object oldValue, Object newValue) {
+    static ResultNode diff(Object oldValue, Object newValue) {
         return diff(ROOT_FIELD_NAME, oldValue, newValue);
     }
 
@@ -44,6 +46,7 @@ public class DiffManager {
             return new ResultNode(fieldName, oldObject, null, REMOVED, emptyList());
         }
 
+        // todo - what about parent and child classes (extends, implements)?
         // not equals classes
         var oldObjectClass = oldObject.getClass();
         var newObjectClass = newObject.getClass();
@@ -80,7 +83,7 @@ public class DiffManager {
         return diffObject(fieldName, oldObjectClass, oldObject, newObjectClass, newObject);
     }
 
-    private static ResultNodeState diffSimple(Object baseValue, Object comparableValue) {
+    private static ResultNode.ResultNodeState diffSimple(Object baseValue, Object comparableValue) {
         if(Objects.isNull(baseValue) && Objects.nonNull(comparableValue)) {
             return ADDED;
         }
@@ -230,7 +233,7 @@ public class DiffManager {
         }
     }
 
-    private static ResultNodeState getStateBasedOnChildrenStates(List<ResultNode> children) {
+    private static ResultNode.ResultNodeState getStateBasedOnChildrenStates(List<ResultNode> children) {
         return children.stream().allMatch(child -> child.state() == UNTOUCHED)
                 ? UNTOUCHED
                 : CHANGED;

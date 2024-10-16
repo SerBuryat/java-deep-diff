@@ -1,4 +1,4 @@
-package com.thunder.base.diff;
+package com.thunder.base.utils.diff;
 
 import java.lang.reflect.Array;
 

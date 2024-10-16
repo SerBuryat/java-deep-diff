@@ -1,9 +1,9 @@
-package com.thunder.base.diff;
+package com.thunder.base.utils.diff;
 
-import static com.thunder.base.diff.DiffManager.ROOT_FIELD_NAME;
-import static com.thunder.base.diff.DiffManager.diff;
-import static com.thunder.base.diff.ResultNodeState.CHANGED;
-import static com.thunder.base.diff.ResultNodeState.UNTOUCHED;
+import static com.thunder.base.utils.diff.DiffManager.ROOT_FIELD_NAME;
+import static com.thunder.base.utils.diff.DiffManager.diff;
+import static com.thunder.base.utils.diff.ResultNode.ResultNodeState.CHANGED;
+import static com.thunder.base.utils.diff.ResultNode.ResultNodeState.UNTOUCHED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Collections;
@@ -48,5 +48,7 @@ public class DiffManagerTest {
             assertEquals(result2, diff(value1, value2));
         });
     }
+
+    // todo - more tests...
 
 }
