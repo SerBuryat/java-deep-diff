@@ -1,15 +1,15 @@
 package com.thunder.base.diff;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Function;
-import org.junit.jupiter.api.Test;
-
 import static com.thunder.base.diff.DiffManager.ROOT_FIELD_NAME;
 import static com.thunder.base.diff.DiffManager.diff;
 import static com.thunder.base.diff.ResultNodeState.CHANGED;
 import static com.thunder.base.diff.ResultNodeState.UNTOUCHED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Function;
+import org.junit.jupiter.api.Test;
 
 public class DiffManagerTest {
 

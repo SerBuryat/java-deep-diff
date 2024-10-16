@@ -4,12 +4,12 @@ import static com.thunder.base.diff.ResultNodeState.ADDED;
 import static com.thunder.base.diff.ResultNodeState.CHANGED;
 import static com.thunder.base.diff.ResultNodeState.REMOVED;
 import static com.thunder.base.diff.ResultNodeState.UNTOUCHED;
+import static java.util.Collections.emptyList;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -33,15 +33,15 @@ public class DiffManager {
     private static ResultNode diff(String fieldName, Object oldObject, Object newObject) {
         // equals or both == null
         if(Objects.equals(oldObject, newObject)) {
-            return new ResultNode(fieldName, oldObject, newObject, UNTOUCHED, Collections.emptyList());
+            return new ResultNode(fieldName, oldObject, newObject, UNTOUCHED, emptyList());
         }
 
         // some == null
         if(Objects.isNull(oldObject)) {
-            return new ResultNode(fieldName, null, newObject, ADDED, Collections.emptyList());
+            return new ResultNode(fieldName, null, newObject, ADDED, emptyList());
         }
         if(Objects.isNull(newObject)) {
-            return new ResultNode(fieldName, oldObject, null, REMOVED, Collections.emptyList());
+            return new ResultNode(fieldName, oldObject, null, REMOVED, emptyList());
         }
 
         // not equals classes
@@ -59,7 +59,7 @@ public class DiffManager {
         // class == primitive or included in classes list
         if(oldObjectClass.isPrimitive() || CLASSES_FOR_SIMPLE_DIFF.contains(oldObjectClass)) {
             return new ResultNode(
-                    fieldName, oldObject, newObject, diffSimple(oldObject, newObject), Collections.emptyList()
+                    fieldName, oldObject, newObject, diffSimple(oldObject, newObject), emptyList()
             );
         }
 
@@ -95,7 +95,7 @@ public class DiffManager {
 
     private static ResultNode diffArray(String fieldName, Object[] oldArray, Object[] newArray) {
         if(Arrays.equals(oldArray, newArray)) {
-            return new ResultNode(fieldName, oldArray, newArray, UNTOUCHED, Collections.emptyList());
+            return new ResultNode(fieldName, oldArray, newArray, UNTOUCHED, emptyList());
         }
 
         var resultNodeChildren = new ArrayList<ResultNode>();
@@ -103,7 +103,7 @@ public class DiffManager {
             var oldArrayItem = oldArray[i];
             if(i >= newArray.length) {
                 resultNodeChildren.add(
-                        new ResultNode(String.valueOf(i), oldArrayItem, null, REMOVED, Collections.emptyList())
+                        new ResultNode(String.valueOf(i), oldArrayItem, null, REMOVED, emptyList())
                 );
             }
             var newArrayItem = newArray[i];
@@ -117,7 +117,7 @@ public class DiffManager {
             for (int i = oldArray.length;i < newArray.length - 1; i++) {
                 var newArrayItem = newArray[i];
                 resultNodeChildren.add(
-                        new ResultNode(String.valueOf(i), null, newArrayItem, ADDED, Collections.emptyList())
+                        new ResultNode(String.valueOf(i), null, newArrayItem, ADDED, emptyList())
                 );
             }
         }
@@ -128,9 +128,68 @@ public class DiffManager {
         );
     }
 
-    private static ResultNode diffMap(String fieldName, Map<?,?> oldValue, Map<?,?> newValue) {
-        // todo
-        return null;
+    private static ResultNode diffMap(String fieldName, Map<?,?> oldMap, Map<?,?> newMap) {
+        if(oldMap.equals(newMap)) {
+            // todo - need to fill with children nodes? (every children-entry is UNTOUCHED)
+            return new ResultNode(fieldName, oldMap, newMap, UNTOUCHED, emptyList());
+        }
+
+        var resultNodeChildren = new ArrayList<ResultNode>();
+
+        oldMap.forEach((oldKey, oldValue) -> {
+            // if no `oldMap` keys in `newMap` -> REMOVED
+            if(newMap.get(oldKey) == null) {
+                resultNodeChildren.add(
+                        new ResultNode(
+                                "key",
+                                oldKey,
+                                null,
+                                REMOVED,
+                                List.of(
+                                        new ResultNode(
+                                                "value", oldValue, null, REMOVED, emptyList()
+                                        )
+                                )
+                        )
+                );
+            } else {
+                // If `oldMap` keys found in `newMap` -> CHANGED or UNTOUCHED
+                var valuesDiff = diff("value",  oldMap.get(oldKey), newMap.get(oldKey));
+                resultNodeChildren.add(
+                        new ResultNode(
+                                "key",
+                                oldKey,
+                                // here oldKey == newKey
+                                oldKey,
+                                valuesDiff.state(),
+                                List.of(valuesDiff)
+                        )
+                );
+            }
+        });
+
+        // if no `newMap` keys in `oldMap` -> REMOVED
+        newMap.forEach((newKey, newValue) -> {
+            if(oldMap.get(newKey) == null) {
+                resultNodeChildren.add(
+                        new ResultNode(
+                                "key",
+                                null,
+                                newKey,
+                                ADDED,
+                                List.of(
+                                        new ResultNode(
+                                                "value", null, newValue, ADDED, emptyList()
+                                        )
+                                )
+                        )
+                );
+            }
+        });
+
+        return new ResultNode(
+                fieldName, oldMap, newMap, getStateBasedOnChildrenStates(resultNodeChildren), resultNodeChildren
+        );
     }
 
     private static ResultNode diffObject(String fieldName,
